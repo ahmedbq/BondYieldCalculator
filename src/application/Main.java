@@ -1,18 +1,26 @@
 package application;
 	
 import java.util.EnumSet;
+import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import org.junit.platform.commons.util.StringUtils;
-
+import calculator.Calculator;
 import javafx.application.Application;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.event.EventHandler;
 import javafx.geometry.HPos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
@@ -25,12 +33,32 @@ public class Main extends Application {
 		try {
 			BorderPane borderPane = new BorderPane();
 			GridPane gridPane = new GridPane();
+			Calculator calc = new Calculator();
 			
 			// Create all of the input text fields
 			EnumSet.allOf(INPUT.class)
 				   .forEach(e -> {
 					   TextField text = new TextField();
 					   text.setTooltip(new Tooltip(e.toString()));
+					   text.setId(e.toString());
+					   text.setOnKeyPressed(new EventHandler<KeyEvent>() {
+						   @Override
+						   public void handle(KeyEvent ke) {
+							   if (ke.getCode().equals(KeyCode.ENTER)) {
+								   switch(e) {
+								   		case PRICE:
+								   			System.out.println(areFieldsFilledOut(e, gridPane));
+								   			break;
+								   		case RATE:
+								   			break;
+								   		default:
+								   			break;
+								   }
+								   
+							   }
+						   }
+					   });
+					   
 					   text.textProperty().addListener(new ChangeListener<String>() {
 						   @Override
 						   public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
@@ -52,7 +80,6 @@ public class Main extends Application {
 							   }
 						   }
 					   });
-					   
 					   gridPane.add(text, e.ordinal(), 1);
 					   
 					   Label desc = new Label();
@@ -75,10 +102,68 @@ public class Main extends Application {
 		}
 	}
 	
+	/*
+	 * This checks if the corresponding text fields which are
+	 * used to calculate the field you want to calculate are 
+	 * filled out. It checks if all of them are empty except the
+	 * field you are on.
+	 */
+	public boolean areFieldsFilledOut(INPUT fieldToCalculate, GridPane gridPane) {
+		List<Node> fields = gridPane.getChildren().stream()
+											  		.filter(f -> f.getId() != null)
+											  		.filter(f -> !f.getId().equals(fieldToCalculate.toString()))
+											  		.collect(Collectors.toList());
+		
+		Stream<Node> filledOutFieldStream = fields.stream().filter(f -> {
+										 	TextField text = (TextField) f;
+										 	if (text.getText().equals("")) {
+										 		return false;
+										 	}
+										 	return true;
+										});
+												
+		Stream<Node> emptyFields = fields.stream().filter(f -> {
+									 	TextField text = (TextField) f;
+									 	if (text.getText().equals("")) {
+									 		return true;
+									 	}
+									 	return false;
+									});
+		
+		Alert error = new Alert(AlertType.INFORMATION);
+		
+		if (filledOutFieldStream.count() != INPUT.values().length - 1) {
+			String message = "Fill out missing fields: "; 
+			
+			List<Node> emptyFieldsNodes = emptyFields.collect(Collectors.toList());
+		
+			for (Node node : emptyFieldsNodes) {
+				TextField text = (TextField) node;
+				message += "\n\t" + text.getId();
+			}
+			
+			error.setContentText(message);
+			error.show();
+			
+			return false;
+		}
+		
+		return true;
+	}
+	
+	/*
+	 * Used to replace the last occurrence of a character. Mainly used to remove
+	 * any decimal point when one is already there.
+	 */
     public static String replaceLast(String text, String regex, String replacement) {
         return text.replaceFirst("(?s)(.*)" + regex, "$1" + replacement);
     }
 	
+    /*
+     * This is used to check if a number is valid with 1 decimal point
+     * if it's supposed to have a decimal, or if it's a valid number
+     * which cannot have a decimal point.
+     */
 	public static boolean isNumeric(String strNum, boolean hasDecimal) {
 	    if (strNum == null) {
 	        return false;
@@ -94,6 +179,9 @@ public class Main extends Application {
 		launch(args);
 	}
 	
+	/*
+	 * The variables used in the bond yield calculations
+	 */
 	public enum INPUT {
 		PRICE,
 		COUPON,

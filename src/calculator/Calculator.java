@@ -30,7 +30,7 @@ public class Calculator {
 	 * 		3. face
 	 * 		4. rate
 	 */
-	double calcPrice(double coupon, int years, double face, double rate) {
+	public double calcPrice(double coupon, int years, double face, double rate) {
 		// Note: YTM is the same thing as the interest rate,
 		// and it's the same thing as the discount rate
 		
@@ -70,7 +70,7 @@ public class Calculator {
 	 * 		3. face
 	 * 		4. price
 	 */
-	double calcYield(double coupon, int years, double face, double price) {
+	public double calcYield(double coupon, int years, double face, double price) {
 		// Note: Bond's yield is referring to rate r
 		
 		// Search for a rate via binary search
