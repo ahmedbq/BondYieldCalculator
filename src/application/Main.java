@@ -1,10 +1,14 @@
 package application;
 	
 import java.util.EnumSet;
+import java.util.regex.Pattern;
+
+import org.junit.platform.commons.util.StringUtils;
 
 import javafx.application.Application;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.geometry.HPos;
-import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -27,6 +31,27 @@ public class Main extends Application {
 				   .forEach(e -> {
 					   TextField text = new TextField();
 					   text.setTooltip(new Tooltip(e.toString()));
+					   text.textProperty().addListener(new ChangeListener<String>() {
+						   @Override
+						   public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+							   
+							   // Years cannot have a decimal value
+							   if (e.name().equals("YEARS")) {
+								   text.setText(newValue.replaceAll("[^-?\\d+(\\d+)?]", ""));
+							   } 
+							   // Otherwise decimals are allowed
+							   else {
+								   // If there are more than 1 decimal points, remove the latest one
+								   if(newValue.chars().filter(ch -> ch == '.').count() > 1) {
+									   text.setText(replaceLast(newValue, "[.]", ""));
+								   }
+								   // Otherwise user is trying to put in a non-numeric character. Remove it.
+								   else {
+									   text.setText(newValue.replaceAll("[^-?\\d+(\\.\\d+)?]", ""));   
+								   }
+							   }
+						   }
+					   });
 					   
 					   gridPane.add(text, e.ordinal(), 1);
 					   
@@ -48,6 +73,21 @@ public class Main extends Application {
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
+	}
+	
+    public static String replaceLast(String text, String regex, String replacement) {
+        return text.replaceFirst("(?s)(.*)" + regex, "$1" + replacement);
+    }
+	
+	public static boolean isNumeric(String strNum, boolean hasDecimal) {
+	    if (strNum == null) {
+	        return false;
+	    }
+	    
+		String regex = hasDecimal ? "-?\\d+(\\.\\d+)?" : "-?\\d+(\\d+)?";
+		Pattern pattern = Pattern.compile(regex);
+		
+		return pattern.matcher(strNum).matches();
 	}
 	
 	public static void main(String[] args) {

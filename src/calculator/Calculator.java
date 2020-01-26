@@ -8,7 +8,10 @@ import java.math.RoundingMode;
  */
 public class Calculator {
 	/*
-	 * Variables used to set the accuracy of the calculations
+	 * Variables used to set the accuracy of the calculations.
+	 * If the price calculator sees performance issues, you can branch off
+	 * a separate precision constant with 1 less zero which is still
+	 * accurate enough.
 	 */
 	public static final int SCALE = 7;
 	public static final double PRECISION = 0.00_000_001;
