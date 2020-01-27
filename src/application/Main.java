@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import calculator.Calculator;
+import calculator.INPUT;
 import javafx.application.Application;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -41,15 +42,25 @@ public class Main extends Application {
 					   TextField text = new TextField();
 					   text.setTooltip(new Tooltip(e.toString()));
 					   text.setId(e.toString());
+					   
 					   text.setOnKeyPressed(new EventHandler<KeyEvent>() {
 						   @Override
 						   public void handle(KeyEvent ke) {
 							   if (ke.getCode().equals(KeyCode.ENTER)) {
 								   switch(e) {
 								   		case PRICE:
-								   			System.out.println(areFieldsFilledOut(e, gridPane));
+								   			if (areFieldsFilledOut(e, gridPane)) {
+								   				double price = calc.calcPrice(gridPane);
+									   			text.setText(String.valueOf(price));
+								   			};
+								   			
 								   			break;
 								   		case RATE:
+								   			if (areFieldsFilledOut(e, gridPane)) {
+								   				double rate = calc.calcYield(gridPane);
+									   			text.setText(String.valueOf(rate));
+								   			};
+								   			
 								   			break;
 								   		default:
 								   			break;
@@ -109,39 +120,43 @@ public class Main extends Application {
 	 * field you are on.
 	 */
 	public boolean areFieldsFilledOut(INPUT fieldToCalculate, GridPane gridPane) {
-		List<Node> fields = gridPane.getChildren().stream()
-											  		.filter(f -> f.getId() != null)
-											  		.filter(f -> !f.getId().equals(fieldToCalculate.toString()))
-											  		.collect(Collectors.toList());
+		List<Node> fields2 = gridPane.getChildren()
+				   .stream()
+				   .filter(f -> f.getId() != null)
+				   .filter(f -> !f.getId().equals(fieldToCalculate.toString()))
+				   .collect(Collectors.toList());
 		
-		Stream<Node> filledOutFieldStream = fields.stream().filter(f -> {
-										 	TextField text = (TextField) f;
-										 	if (text.getText().equals("")) {
-										 		return false;
-										 	}
-										 	return true;
-										});
+		Stream<Node> filledOutFieldStream = fields2.stream().filter(f -> {
+											 	TextField text = (TextField) f;
+											 	if (text.getText().equals("")) {
+											 		return false;
+											 	}
+											 	return true;
+											});
 												
-		Stream<Node> emptyFields = fields.stream().filter(f -> {
+		List<Node> emptyFields = fields2.stream().filter(f -> {
 									 	TextField text = (TextField) f;
 									 	if (text.getText().equals("")) {
 									 		return true;
 									 	}
 									 	return false;
-									});
+									}).collect(Collectors.toList());
 		
 		Alert error = new Alert(AlertType.INFORMATION);
 		
-		if (filledOutFieldStream.count() != INPUT.values().length - 1) {
+		long count = filledOutFieldStream.count();
+		
+		if (Math.toIntExact(count) != INPUT.values().length - 1) {
 			String message = "Fill out missing fields: "; 
 			
-			List<Node> emptyFieldsNodes = emptyFields.collect(Collectors.toList());
-		
-			for (Node node : emptyFieldsNodes) {
+			System.out.println("Size of emptyFieldsNodes: " + emptyFields.size());
+			System.out.println("INPUT.values().length - 1: " + (INPUT.values().length - 1));
+			System.out.println("filledOutFieldStream.count(): " + count);
+			for (Node node : emptyFields) {
 				TextField text = (TextField) node;
 				message += "\n\t" + text.getId();
 			}
-			
+
 			error.setContentText(message);
 			error.show();
 			
@@ -179,14 +194,4 @@ public class Main extends Application {
 		launch(args);
 	}
 	
-	/*
-	 * The variables used in the bond yield calculations
-	 */
-	public enum INPUT {
-		PRICE,
-		COUPON,
-		YEARS,
-		FACE,
-		RATE
-	}
 }

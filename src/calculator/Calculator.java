@@ -2,6 +2,13 @@ package calculator;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import javafx.scene.Node;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.GridPane;
 
 /*
  * This class stores all of the calculations used by the calculator
@@ -131,6 +138,90 @@ public class Calculator {
 		
 		return rate;
 		
+	}
+
+	public double calcYield(GridPane gridPane) {
+		List<Node> fields = gridPane.getChildren()
+								    .stream()
+								    .filter(f -> f.getId() != null)
+								    .collect(Collectors.toList());
+		
+		Optional<Double> coupon = Optional.of(0.0);
+		Optional<Integer> years = Optional.of(0);
+		Optional<Double> face = Optional.of(0.0);
+		Optional<Double> price = Optional.of(0.0);
+		
+		coupon = fields.stream()
+					   .filter(f -> f.getId().equals(INPUT.COUPON.toString()))
+					   .map(m -> {
+						   TextField text = (TextField) m; 
+						   return Double.parseDouble(text.getText());})
+					   .findAny();
+		
+		years = fields.stream()
+				   	  .filter(f -> f.getId().equals(INPUT.YEARS.toString()))
+				   	  .map(m -> {
+				   		  TextField text = (TextField) m; 
+				   		  return Integer.parseInt(text.getText());})
+				   	  .findAny();
+		
+		face = fields.stream()
+		   		     .filter(f -> f.getId().equals(INPUT.FACE.toString()))
+		   		     .map(m -> {
+		   		    	 TextField text = (TextField) m; 
+		   		    	 return Double.parseDouble(text.getText());})
+		   		     .findAny();
+		
+		price = fields.stream()
+			   		  .filter(f -> f.getId().equals(INPUT.PRICE.toString()))
+			   		  .map(m -> {
+			   			  TextField text = (TextField) m; 
+			   			  return Double.parseDouble(text.getText());})
+			   		  .findAny();
+		
+		return calcYield(coupon.get(), years.get(), face.get(), price.get());
+	}
+
+	public double calcPrice(GridPane gridPane) {
+		List<Node> fields = gridPane.getChildren()
+								    .stream()
+								    .filter(f -> f.getId() != null)
+								    .collect(Collectors.toList());
+		
+		Optional<Double> coupon = Optional.of(0.0);
+		Optional<Integer> years = Optional.of(0);
+		Optional<Double> face = Optional.of(0.0);
+		Optional<Double> rate = Optional.of(0.0);
+		
+		coupon = fields.stream()
+					   .filter(f -> f.getId().equals(INPUT.COUPON.toString()))
+					   .map(m -> {
+						   TextField text = (TextField) m; 
+						   return Double.parseDouble(text.getText());})
+					   .findAny();
+		
+		years = fields.stream()
+				   	  .filter(f -> f.getId().equals(INPUT.YEARS.toString()))
+				   	  .map(m -> {
+				   		  TextField text = (TextField) m; 
+				   		  return Integer.parseInt(text.getText());})
+				   	  .findAny();
+		
+		face = fields.stream()
+		   		     .filter(f -> f.getId().equals(INPUT.FACE.toString()))
+		   		     .map(m -> {
+		   		    	 TextField text = (TextField) m; 
+		   		    	 return Double.parseDouble(text.getText());})
+		   		     .findAny();
+		
+		rate = fields.stream()
+			   		  .filter(f -> f.getId().equals(INPUT.RATE.toString()))
+			   		  .map(m -> {
+			   			  TextField text = (TextField) m; 
+			   			  return Double.parseDouble(text.getText());})
+			   		  .findAny();
+		
+		return calcPrice(coupon.get(), years.get(), face.get(), rate.get());
 	}
 
 }
