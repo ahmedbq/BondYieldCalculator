@@ -45,7 +45,7 @@ public class Main extends Application {
 			// Put formula image on top
 			Image formulaImage = new Image("resources/Formula.png", false);
 			ImageView banner = new ImageView(formulaImage);
-			banner.setFitWidth(800.0);
+			banner.setFitWidth(820.0);
 			banner.setPreserveRatio(true);
 			borderPane.setTop(banner);
 			
