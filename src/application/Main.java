@@ -32,85 +32,121 @@ public class Main extends Application {
 	@Override
 	public void start(Stage primaryStage) {
 		try {
+			// Set up page architecture
 			BorderPane borderPane = new BorderPane();
 			GridPane gridPane = new GridPane();
+			borderPane.setCenter(gridPane);
 			Calculator calc = new Calculator();
 			
 			// Create all of the input text fields
-			EnumSet.allOf(INPUT.class)
-				   .forEach(e -> {
-					   TextField text = new TextField();
-					   text.setTooltip(new Tooltip(e.toString()));
-					   text.setId(e.toString());
-					   
-					   text.setOnKeyPressed(new EventHandler<KeyEvent>() {
-						   @Override
-						   public void handle(KeyEvent ke) {
-							   if (ke.getCode().equals(KeyCode.ENTER)) {
-								   switch(e) {
-								   		case PRICE:
-								   			if (areFieldsFilledOut(e, gridPane)) {
-								   				double price = calc.calcPrice(gridPane);
-									   			text.setText(String.valueOf(price));
-								   			};
-								   			
-								   			break;
-								   		case RATE:
-								   			if (areFieldsFilledOut(e, gridPane)) {
-								   				double rate = calc.calcYield(gridPane);
-									   			text.setText(String.valueOf(rate));
-								   			};
-								   			
-								   			break;
-								   		default:
-								   			break;
-								   }
-								   
-							   }
-						   }
-					   });
-					   
-					   text.textProperty().addListener(new ChangeListener<String>() {
-						   @Override
-						   public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
-							   
-							   // Years cannot have a decimal value
-							   if (e.name().equals("YEARS")) {
-								   text.setText(newValue.replaceAll("[^-?\\d+(\\d+)?]", ""));
-							   } 
-							   // Otherwise decimals are allowed
-							   else {
-								   // If there are more than 1 decimal points, remove the latest one
-								   if(newValue.chars().filter(ch -> ch == '.').count() > 1) {
-									   text.setText(replaceLast(newValue, "[.]", ""));
-								   }
-								   // Otherwise user is trying to put in a non-numeric character. Remove it.
-								   else {
-									   text.setText(newValue.replaceAll("[^-?\\d+(\\.\\d+)?]", ""));   
-								   }
-							   }
-						   }
-					   });
-					   gridPane.add(text, e.ordinal(), 1);
-					   
-					   Label desc = new Label();
-					   desc.setText(e.toString());
-					   
-					   gridPane.add(desc, e.ordinal(), 2);
-					   GridPane.setHalignment(desc, HPos.CENTER);
-				   });
+			createInputTextFields(gridPane, calc);
 			
-			
-			
-			borderPane.setCenter(gridPane);
+			// Creates the scene
 			Scene scene = new Scene(borderPane,800,800);
 			scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
 			scene.setFill(Color.rgb(181,198,145));
+			
+			// Sets the scene on the stage (what you currently see)
+			primaryStage.setTitle("Bond Yield Calculator");
 			primaryStage.setScene(scene);
 			primaryStage.show();
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	private void createInputTextFields(GridPane gridPane, Calculator calc) {
+		// Loop through the EnumSet and generate an input text field
+		// and description for all of them
+		EnumSet.allOf(INPUT.class)
+			   .forEach(e -> {
+				   // Create an input text field
+				   TextField text = new TextField();
+				   text.setTooltip(new Tooltip(e.toString()));
+				   text.setId(e.toString());
+				   
+				   // Handles what happens when you press enter on an input field
+				   setEnterKeyHandler(gridPane, calc, e, text);
+				   
+				   // Handles input which are not numbers or decimals
+				   // Also limits the amount of decimals
+				   setInputHandling(e, text);
+				   
+				   // Creates label underneath the input box
+				   // For e.g. YEARS
+				   Label desc = new Label();
+				   desc.setText(e.toString());
+				   
+				   // Adds and aligns the input and description on the grid
+				   gridPane.add(text, e.ordinal(), 1);
+				   gridPane.add(desc, e.ordinal(), 2);
+				   GridPane.setHalignment(desc, HPos.CENTER);
+			   });
+	}
+
+	/*
+	 * This sets what happens when a new value is put onto the screen.
+	 * Also makes sure any non-numerical characters are cut out and 
+	 * not included.
+	 */
+	private void setInputHandling(INPUT e, TextField text) {
+		text.textProperty().addListener(new ChangeListener<String>() {
+			   @Override
+			   public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+				   
+				   // Years cannot have a decimal value
+				   if (e.name().equals("YEARS")) {
+					   text.setText(newValue.replaceAll("[^-?\\d+(\\d+)?]", ""));
+				   } 
+				   // Otherwise decimals are allowed
+				   else {
+					   // If there are more than 1 decimal points, remove the latest one
+					   if(newValue.chars().filter(ch -> ch == '.').count() > 1) {
+						   text.setText(replaceLast(newValue, "[.]", ""));
+					   }
+					   // Otherwise user is trying to put in a non-numeric character. Remove it.
+					   else {
+						   text.setText(newValue.replaceAll("[^-?\\d+(\\.\\d+)?]", ""));   
+					   }
+				   }
+			   }
+		   });
+	}
+
+	/*
+	 * This handles what happens when the user presses the enter key on an input field.
+	 * This is an alternative to using the button on the screen.
+	 */
+	private void setEnterKeyHandler(GridPane gridPane, Calculator calc, INPUT e, TextField text) {
+		text.setOnKeyPressed(new EventHandler<KeyEvent>() {
+			   @Override
+			   public void handle(KeyEvent ke) {
+				   if (ke.getCode().equals(KeyCode.ENTER)) {
+					   // When enter is clicked for the relevant fields,
+					   // it checks if the other fields are filled out 
+					   // and then it can safely calculate the input field
+					   switch(e) {
+					   		case PRICE:
+					   			if (areFieldsFilledOut(e, gridPane)) {
+					   				double price = calc.calcPrice(gridPane);
+						   			text.setText(String.valueOf(price));
+					   			}
+					   			
+					   			break;
+					   		case RATE:
+					   			if (areFieldsFilledOut(e, gridPane)) {
+					   				double rate = calc.calcYield(gridPane);
+						   			text.setText(String.valueOf(rate));
+					   			}
+					   			
+					   			break;
+					   		default:
+					   			break;
+					   }
+					   
+				   }
+			   }
+		   });
 	}
 	
 	/*
@@ -120,21 +156,15 @@ public class Main extends Application {
 	 * field you are on.
 	 */
 	public boolean areFieldsFilledOut(INPUT fieldToCalculate, GridPane gridPane) {
-		List<Node> fields2 = gridPane.getChildren()
+		// Grabs all fields besides the one you are on
+		List<Node> otherFields = gridPane.getChildren()
 				   .stream()
 				   .filter(f -> f.getId() != null)
 				   .filter(f -> !f.getId().equals(fieldToCalculate.toString()))
 				   .collect(Collectors.toList());
 		
-		Stream<Node> filledOutFieldStream = fields2.stream().filter(f -> {
-											 	TextField text = (TextField) f;
-											 	if (text.getText().equals("")) {
-											 		return false;
-											 	}
-											 	return true;
-											});
-												
-		List<Node> emptyFields = fields2.stream().filter(f -> {
+		// Grabs the fields which are not filled out
+		List<Node> emptyFields = otherFields.stream().filter(f -> {
 									 	TextField text = (TextField) f;
 									 	if (text.getText().equals("")) {
 									 		return true;
@@ -142,21 +172,20 @@ public class Main extends Application {
 									 	return false;
 									}).collect(Collectors.toList());
 		
-		Alert error = new Alert(AlertType.INFORMATION);
-		
-		long count = filledOutFieldStream.count();
-		
-		if (Math.toIntExact(count) != INPUT.values().length - 1) {
+		// If there are empty fields, then display an error message
+		// with the corresponding missing fields.
+		if (!emptyFields.isEmpty()) {
 			String message = "Fill out missing fields: "; 
 			
-			System.out.println("Size of emptyFieldsNodes: " + emptyFields.size());
-			System.out.println("INPUT.values().length - 1: " + (INPUT.values().length - 1));
-			System.out.println("filledOutFieldStream.count(): " + count);
+			// Grab the names (stored in the id) 
+			// of each node in the empty fields.
 			for (Node node : emptyFields) {
 				TextField text = (TextField) node;
 				message += "\n\t" + text.getId();
 			}
 
+			// Create alert message.
+			Alert error = new Alert(AlertType.INFORMATION);
 			error.setContentText(message);
 			error.show();
 			
@@ -190,6 +219,9 @@ public class Main extends Application {
 		return pattern.matcher(strNum).matches();
 	}
 	
+	/*
+	 * Main method
+	 */
 	public static void main(String[] args) {
 		launch(args);
 	}
