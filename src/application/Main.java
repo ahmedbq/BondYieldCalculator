@@ -21,6 +21,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
@@ -39,6 +41,13 @@ public class Main extends Application {
 			BorderPane borderPane = new BorderPane();
 			GridPane gridPane = new GridPane();
 			borderPane.setCenter(gridPane);
+			
+			// Put formula image on top
+			Image formulaImage = new Image("resources/Formula.png", false);
+			ImageView banner = new ImageView(formulaImage);
+			banner.setFitWidth(800.0);
+			banner.setPreserveRatio(true);
+			borderPane.setTop(banner);
 			
 			// Create the HOW TO description on the bottom
 			Label howTo = new Label(" You can press ENTER on the given field you want to calculate OR you can use the buttons.");
@@ -68,6 +77,8 @@ public class Main extends Application {
 			// Sets the scene on the stage (what you currently see)
 			primaryStage.setTitle("Bond Yield Calculator");
 			primaryStage.setScene(scene);
+			// Disabling the resize button because the application is not responsive yet
+			primaryStage.setResizable(false);
 			primaryStage.show();
 		} catch(Exception e) {
 			e.printStackTrace();
