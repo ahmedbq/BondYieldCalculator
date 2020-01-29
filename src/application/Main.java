@@ -4,7 +4,6 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import calculator.Calculator;
 import calculator.INPUT;
@@ -13,17 +12,21 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.EventHandler;
 import javafx.geometry.HPos;
+import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
@@ -36,13 +39,29 @@ public class Main extends Application {
 			BorderPane borderPane = new BorderPane();
 			GridPane gridPane = new GridPane();
 			borderPane.setCenter(gridPane);
+			
+			// Create the HOW TO description on the bottom
+			Label howTo = new Label(" You can press ENTER on the given field you want to calculate OR you can use the buttons.");
+			howTo.setPadding(new Insets(10,10,10,10));
+			borderPane.setBottom(howTo);
+			
+			// Create instance of class which has the mathematical functionality
 			Calculator calc = new Calculator();
 			
 			// Create all of the input text fields
 			createInputTextFields(gridPane, calc);
 			
-			// Creates the scene
-			Scene scene = new Scene(borderPane,800,800);
+			// Create barrier between text fields and buttons for space
+			Region space = new Region();
+			space.setPadding(new Insets(20, 20, 20, 20));
+			gridPane.add(space, 1, 3);
+			
+			// Create Price and Yield Button
+			createButton(gridPane, calc, INPUT.PRICE);
+			createButton(gridPane, calc, INPUT.RATE);
+			
+			// Create the scene
+			Scene scene = new Scene(borderPane,800,400);
 			scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
 			scene.setFill(Color.rgb(181,198,145));
 			
@@ -55,6 +74,35 @@ public class Main extends Application {
 		}
 	}
 
+	/*
+	 * Creates button and sets its logic upon clicking.
+	 */
+	private void createButton(GridPane gridPane, Calculator calc, INPUT field) {
+		String displayName = "Calculate " + field.toString();
+		Button button = new Button(displayName);
+		button.setPadding(new Insets(10, 10, 10, 10));
+		button.setTooltip(new Tooltip(displayName));
+		
+		TextField input = (TextField) gridPane.getChildren().stream()
+															.filter(f -> f.getId() != null)
+															.filter(f -> f.getId().equals(field.toString())).findAny().get();
+		
+		switch(field) {
+			case PRICE:
+				gridPane.add(button, 3, 4);
+				break;
+		
+			case RATE:
+				gridPane.add(button, 1, 4);
+				break;
+				
+			default: 
+				break;
+		}
+		
+		setButtonPressHandler(gridPane, calc, field, button, input);
+	}
+
 	private void createInputTextFields(GridPane gridPane, Calculator calc) {
 		// Loop through the EnumSet and generate an input text field
 		// and description for all of them
@@ -62,6 +110,7 @@ public class Main extends Application {
 			   .forEach(e -> {
 				   // Create an input text field
 				   TextField text = new TextField();
+				   text.setPadding(new Insets(10, 10, 10, 10));
 				   text.setTooltip(new Tooltip(e.toString()));
 				   text.setId(e.toString());
 				   
@@ -112,12 +161,45 @@ public class Main extends Application {
 			   }
 		   });
 	}
+	
+	/*
+	 * This handles what happens when the user presses the enter key on an input field.
+	 * This is an alternative to using the button on the screen.
+	 */
+	private void setButtonPressHandler(GridPane gridPane, Calculator calc, INPUT field, Button button, TextField input) {
+		button.setOnMouseClicked(new EventHandler<MouseEvent>() {
+			   @Override
+			   public void handle(MouseEvent me) {
+					   // When enter is clicked for the relevant fields,
+					   // it checks if the other fields are filled out 
+					   // and then it can safely calculate the input field
+					   switch(field) {
+					   		case PRICE:
+					   			if (areFieldsFilledOut(field, gridPane)) {
+					   				double price = calc.calcPrice(gridPane);
+					   				input.setText(String.valueOf(price));
+					   			}
+					   			
+					   			break;
+					   		case RATE:
+					   			if (areFieldsFilledOut(field, gridPane)) {
+					   				double rate = calc.calcYield(gridPane);
+					   				input.setText(String.valueOf(rate));
+					   			}
+					   			
+					   			break;
+					   		default:
+					   			break;
+					   }
+			   }
+		   });
+	}
 
 	/*
 	 * This handles what happens when the user presses the enter key on an input field.
 	 * This is an alternative to using the button on the screen.
 	 */
-	private void setEnterKeyHandler(GridPane gridPane, Calculator calc, INPUT e, TextField text) {
+	private void setEnterKeyHandler(GridPane gridPane, Calculator calc, INPUT field, TextField text) {
 		text.setOnKeyPressed(new EventHandler<KeyEvent>() {
 			   @Override
 			   public void handle(KeyEvent ke) {
@@ -125,16 +207,16 @@ public class Main extends Application {
 					   // When enter is clicked for the relevant fields,
 					   // it checks if the other fields are filled out 
 					   // and then it can safely calculate the input field
-					   switch(e) {
+					   switch(field) {
 					   		case PRICE:
-					   			if (areFieldsFilledOut(e, gridPane)) {
+					   			if (areFieldsFilledOut(field, gridPane)) {
 					   				double price = calc.calcPrice(gridPane);
 						   			text.setText(String.valueOf(price));
 					   			}
 					   			
 					   			break;
 					   		case RATE:
-					   			if (areFieldsFilledOut(e, gridPane)) {
+					   			if (areFieldsFilledOut(field, gridPane)) {
 					   				double rate = calc.calcYield(gridPane);
 						   			text.setText(String.valueOf(rate));
 					   			}
