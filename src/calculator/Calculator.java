@@ -140,6 +140,10 @@ public class Calculator {
 		
 	}
 
+	/*
+	 * Grabs the gridPane and translates the fields
+	 * into something that the main calcYield method can read
+	 */
 	public double calcYield(GridPane gridPane) {
 		List<Node> fields = gridPane.getChildren()
 								    .stream()
@@ -182,6 +186,10 @@ public class Calculator {
 		return calcYield(coupon.get(), years.get(), face.get(), price.get());
 	}
 
+	/*
+	 * Grabs the gridPane and translates the fields
+	 * into something that the main calcPrice method can read
+	 */
 	public double calcPrice(GridPane gridPane) {
 		List<Node> fields = gridPane.getChildren()
 								    .stream()
