@@ -1,4 +1,4 @@
-# BondYieldCalculator
+# Bond Yield Calculator
 A JavaFX bond yield calculator application which is fast and price to the 10^-7th place. Makes use of a customized binary search algorithm which speeds up or slows down depending on the search's vicinity.
 
 # How to Build
